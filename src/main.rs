@@ -23,9 +23,9 @@ impl MessageLogger for ap::Event {
             Event::Print(print) => println!("[{}] [{}] {}", timestamp, "Archipelago", print),
             Event::DeathLink { games: _, slots: _, tags: _, time: _, cause, source } => {
                 if let Some(cause) = cause {
-                    println!("[{}] [{}] {} {}", timestamp, "Deathlink", source, cause);
+                    println!("[{}] [{}] {} died with message {}", timestamp, "Deathlink", source, cause);
                 } else {
-                    println!("[{}] [{}] {}", timestamp, "Deathlink", source)
+                    println!("[{}] [{}] {} died without a message", timestamp, "Deathlink", source)
                 }
             },
             Event::KeyChanged { key, old_value: _, new_value, player } => {
