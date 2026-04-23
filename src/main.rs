@@ -46,7 +46,14 @@ impl MessageLogger for ap::Event {
                             Some(value) => value.clone(),
                             None => return,
                         };
-                        println!("[{}] [{}] UUID {} sent {} rings.", timestamp, "RingLink", data["source"], data["amount"]);   
+                        println!("[{}] [{}] UUID {} sent {} rings", timestamp, "RingLink", data["source"], data["amount"]);   
+                    } else if tagset.contains(&Ustr::from("TrapLink")) {
+                        let data: Option<serde_json::Value> = data.clone();
+                        let data: serde_json::Value = match data {
+                            Some(value) => value.clone(),
+                            None => return,
+                        };
+                        println!("[{}] [{}] {} sent trap {}", timestamp, "TrapLink", data["source"], data["trap_name"]);
                     }
                 }
             },
@@ -64,7 +71,7 @@ fn main() {
         &*url,
         &*slot_name,
         None::<String>,
-        ConnectionOptions::new().tags([ap::tags::TRACKER, ap::tags::TEXT_ONLY, ap::tags::DEATH_LINK, "RingLink"]),
+        ConnectionOptions::new().tags([ap::tags::TRACKER, ap::tags::TEXT_ONLY, ap::tags::DEATH_LINK, "RingLink", "TrapLink"]),
     );
     let mut watching_keys = false;
     loop {
