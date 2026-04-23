@@ -28,12 +28,13 @@ impl MessageLogger for ap::Event {
                     println!("[{}] [{}] {} died without a message", timestamp, "Deathlink", source)
                 }
             },
-            Event::KeyChanged { key, old_value: _, new_value, player } => {
+            Event::KeyChanged { key, old_value, new_value, player } => {
                 let player = player.clone().map_or(String::from("Unknown"), |v| String::from(&*v.name()));
-                if key == "GiftBox;1" {
-                    println!("[{}] [Gifting] {} changed giftboxes to content {:?}", timestamp, player, new_value)
-                } else if key == "EnergyLink1" {
-                    println!("[{}] [Energylink] {} changed energylink to value {:?}", timestamp, player, new_value)
+                let key: &str = key;
+                if key.contains("GiftBox") {
+                    println!("[{}] [Gifting] {} changed giftbox {} from {:?} to content {:?}", timestamp, player, key, old_value, new_value)
+                } else if key == "EnergyLink0" {
+                    println!("[{}] [Energylink] {} changed energylink from {:?} to value {:?}", timestamp, player, old_value, new_value)
                 } 
             },
             Event::ReceivedItems(_) => (),
@@ -59,8 +60,14 @@ fn main() {
         let events = connection.update();
         if connection.is_connected() {
             if !watching_keys {
-                match connection.client_mut().expect("We literally just checked we're connected").watch(vec!["GiftBox;1", "EnergyLink1"]) {
-                    Ok(()) => watching_keys = true,
+                let mut watched_keys = vec![format!("EnergyLink0")];
+                for player in connection.client().expect("We literally just checked we're connected").players() {
+                    let key = format!("GiftBox;0;{}", player.slot());
+                    watched_keys.push(key);
+                }
+                println!("{:?}", watched_keys);
+                match connection.client_mut().expect("We literally just checked we're connected").watch(watched_keys) {
+                    Ok(()) => {watching_keys = true; println!("Watching those keys!")},
                     Err(error) => error.log_message(), 
                 }
             }
