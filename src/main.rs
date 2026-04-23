@@ -1,5 +1,5 @@
 use archipelago_rs::{self as ap, Connection, ConnectionOptions, Event};
-
+use ustr::{Ustr};
 pub trait MessageLogger {
     fn log_message(&self) -> ();
 }
@@ -38,7 +38,18 @@ impl MessageLogger for ap::Event {
                 } 
             },
             Event::ReceivedItems(_) => (),
-            Event::Bounce { games: _, slots: _, tags: _, data: _ } => (),
+            Event::Bounce { games: _, slots: _, tags, data} => {
+                if let Some(tagset) = tags {
+                    if tagset.contains(&Ustr::from("RingLink")) {
+                        let data: Option<serde_json::Value> = data.clone();
+                        let data: serde_json::Value = match data {
+                            Some(value) => value.clone(),
+                            None => return,
+                        };
+                        println!("[{}] [{}] UUID {} sent {} rings.", timestamp, "RingLink", data["source"], data["amount"]);   
+                    }
+                }
+            },
             Event::Updated(_updated_fields) => (),
             Event::Connected => println!("[{}] [{}] {}", timestamp, "Program", "Connected Succesfully!"),
             Event::Error(_error) => (), // Errors are handled in the main event logic.
@@ -53,7 +64,7 @@ fn main() {
         &*url,
         &*slot_name,
         None::<String>,
-        ConnectionOptions::new().tags([ap::tags::TRACKER, ap::tags::TEXT_ONLY, ap::tags::DEATH_LINK]),
+        ConnectionOptions::new().tags([ap::tags::TRACKER, ap::tags::TEXT_ONLY, ap::tags::DEATH_LINK, "RingLink"]),
     );
     let mut watching_keys = false;
     loop {
