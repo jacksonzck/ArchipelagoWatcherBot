@@ -163,17 +163,28 @@ impl MessageLogger for ap::Event {
 fn main() {
     let url = std::env::args().nth(1).expect("No URL given");
     let slot_name = std::env::args().nth(2).expect("No slot name given");
-    let mut connection: Connection<()> = Connection::new(
-        &*url,
-        &*slot_name,
-        None::<String>,
-        ConnectionOptions::new().tags([
+    let password = std::env::args().nth(3);
+    let connection_options = match password {
+        Some(password) => ConnectionOptions::new().tags([
             ap::tags::TRACKER,
             ap::tags::TEXT_ONLY,
             ap::tags::DEATH_LINK,
             "RingLink",
             "TrapLink",
-        ]),
+        ]).password(password),
+        _ => ConnectionOptions::new().tags([
+            ap::tags::TRACKER,
+            ap::tags::TEXT_ONLY,
+            ap::tags::DEATH_LINK,
+            "RingLink",
+            "TrapLink",
+        ])
+    };
+    let mut connection: Connection<()> = Connection::new(
+        &*url,
+        &*slot_name,
+        None::<String>,
+        connection_options
     );
     let mut watching_keys = false;
     loop {
